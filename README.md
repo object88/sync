@@ -15,7 +15,7 @@ import (
   "os"
   "os/exec"
 
-  "github.com/object88/bbreloader/sync"
+  "github.com/object88/sync"
 )
 
 // Build builds a thing that needs building, of course
@@ -30,7 +30,7 @@ func NewBuild(args []string) *Build {
   return &Build{args, r}
 }
 
-// Run executes the step with an interruptable context
+// Run executes the step with an interruptible context
 func (b *Build) Run() {
   b.restarter.Invoke(b.work)
 }
