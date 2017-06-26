@@ -71,14 +71,17 @@ func Test_WithTwoAsyncInvocations(t *testing.T) {
 	}
 
 	r := NewRestarter()
-	wg.Add(1)
+	wg.Add(2)
 
 	go func() {
 		time.Sleep(1 * time.Millisecond)
 		r.Invoke(f)
 		wg.Done()
 	}()
-	r.Invoke(f)
+	go func() {
+		r.Invoke(f)
+		wg.Done()
+	}()
 
 	wg.Wait()
 	if count != 1 {
@@ -107,7 +110,7 @@ func Test_WithThreeAsyncInvocations(t *testing.T) {
 	}
 
 	r := NewRestarter()
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		time.Sleep(2 * time.Millisecond)
@@ -123,9 +126,12 @@ func Test_WithThreeAsyncInvocations(t *testing.T) {
 		})
 		wg.Done()
 	}()
-	r.Invoke(func(ctx context.Context) {
-		f(ctx, 1)
-	})
+	go func() {
+		r.Invoke(func(ctx context.Context) {
+			f(ctx, 2)
+		})
+		wg.Done()
+	}()
 
 	wg.Wait()
 	if result != 3 {
