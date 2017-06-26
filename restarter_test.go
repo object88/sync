@@ -21,6 +21,12 @@ func Test_WithOneInvocation(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Incorrect count at end of test: %d\n", count)
 	}
+	if r.ctx != nil {
+		t.Error("r.ctx should be null")
+	}
+	if r.c != nil {
+		t.Error("r.c should be null")
+	}
 }
 
 func Test_WithTwoSynchInvocations(t *testing.T) {
@@ -42,6 +48,12 @@ func Test_WithTwoSynchInvocations(t *testing.T) {
 
 	if count != 2 {
 		t.Errorf("Incorrect count at end of test: %d\n", count)
+	}
+	if r.ctx != nil {
+		t.Error("r.ctx should be null")
+	}
+	if r.c != nil {
+		t.Error("r.c should be null")
 	}
 }
 
@@ -72,6 +84,12 @@ func Test_WithTwoAsyncInvocations(t *testing.T) {
 	wg.Wait()
 	if count != 1 {
 		t.Errorf("Incorrect count at end of test: %d\n", count)
+	}
+	if r.ctx != nil {
+		t.Error("r.ctx should be null")
+	}
+	if r.c != nil {
+		t.Error("r.c should be null")
 	}
 }
 
@@ -113,5 +131,53 @@ func Test_WithThreeAsyncInvocations(t *testing.T) {
 	wg.Wait()
 	if result != 3 {
 		t.Errorf("Incorrect result at end of test: %d\n", result)
+	}
+	if r.ctx != nil {
+		t.Error("r.ctx should be null")
+	}
+	if r.c != nil {
+		t.Error("r.c should be null")
+	}
+}
+
+func Test_WithThreeActors(t *testing.T) {
+	// See https://github.com/object88/sync/issues/1
+
+	r := NewRestarter()
+
+	// A starts executing
+	ctxA, cancelFnA := r.spinUp()
+	if r.ctx == nil {
+		t.Error("r.ctx should have a context after A spinUp")
+	}
+	if *r.ctx != ctxA {
+		t.Error("r.ctx has wrong context after A spinUp")
+	}
+	if r.c == nil {
+		t.Error("r.c should have a cancelFn after A spinUp")
+	}
+
+	// B starts executing
+	ctxB, _ := r.spinUp()
+	if r.ctx == nil {
+		t.Error("r.ctx should have a context after B spinUp")
+	}
+	if *r.ctx != ctxB {
+		t.Error("r.ctx has wrong context after B spinUp")
+	}
+	if r.c == nil {
+		t.Error("r.c should have a cancelFn after B spinUp")
+	}
+
+	// A stops processing; should have a context from spinning up B.
+	r.spinDown(cancelFnA)
+	if r.ctx == nil {
+		t.Error("r.ctx should have a context after A spinDown")
+	}
+	if *r.ctx != ctxB {
+		t.Error("r.ctx has wrong context after A spinDown")
+	}
+	if r.c == nil {
+		t.Fatalf("restarter does not have a context")
 	}
 }

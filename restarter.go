@@ -15,13 +15,14 @@ type RestartableFn func(ctx context.Context)
 // is made while one is already running, the first one will be cancelled,
 // and then the second will be started.
 type Restarter struct {
-	m *sync.Mutex
-	c *context.CancelFunc
+	m   *sync.Mutex
+	ctx *context.Context
+	c   *context.CancelFunc
 }
 
 // NewRestarter creatnes a new restarter struct
 func NewRestarter() *Restarter {
-	return &Restarter{&sync.Mutex{}, nil}
+	return &Restarter{&sync.Mutex{}, nil, nil}
 }
 
 // Invoke calls the associated method, first cancelling any existing
@@ -45,6 +46,7 @@ func (r *Restarter) spinUp() (context.Context, context.CancelFunc) {
 	}
 
 	ctx, cancelFn := context.WithCancel(context.Background())
+	r.ctx = &ctx
 	r.c = &cancelFn
 
 	r.m.Unlock()
@@ -55,6 +57,9 @@ func (r *Restarter) spinUp() (context.Context, context.CancelFunc) {
 func (r *Restarter) spinDown(cancelFn context.CancelFunc) {
 	r.m.Lock()
 	cancelFn()
-	r.c = nil
+	if r.ctx != nil && (*r.ctx).Err() != nil {
+		r.ctx = nil
+		r.c = nil
+	}
 	r.m.Unlock()
 }
