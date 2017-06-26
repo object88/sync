@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/object88/sync.svg?branch=master)](https://travis-ci.org/object88/sync)
+
 # Restarter
 
 Restarter is a synchronizing structure that acts as a retriggering gate for another method.  The method will be started with Restarter's `Invoke` function, and must accept a cancellable `context.Context`.  If a second call to `Invoke` is made while a previous is still running, the first one will be cancelled, and then the second will be started.

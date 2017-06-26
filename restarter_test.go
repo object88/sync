@@ -68,16 +68,15 @@ func Test_WithTwoAsyncInvocations(t *testing.T) {
 		default:
 			count++
 		}
-
-		wg.Done()
 	}
 
 	r := NewRestarter()
-	wg.Add(2)
+	wg.Add(1)
 
 	go func() {
 		time.Sleep(1 * time.Millisecond)
 		r.Invoke(f)
+		wg.Done()
 	}()
 	r.Invoke(f)
 
@@ -105,24 +104,24 @@ func Test_WithThreeAsyncInvocations(t *testing.T) {
 		default:
 			result = target
 		}
-
-		wg.Done()
 	}
 
 	r := NewRestarter()
-	wg.Add(3)
+	wg.Add(2)
 
 	go func() {
 		time.Sleep(2 * time.Millisecond)
 		r.Invoke(func(ctx context.Context) {
 			f(ctx, 3)
 		})
+		wg.Done()
 	}()
 	go func() {
 		time.Sleep(1 * time.Millisecond)
 		r.Invoke(func(ctx context.Context) {
 			f(ctx, 2)
 		})
+		wg.Done()
 	}()
 	r.Invoke(func(ctx context.Context) {
 		f(ctx, 1)

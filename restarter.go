@@ -56,10 +56,13 @@ func (r *Restarter) spinUp() (context.Context, context.CancelFunc) {
 
 func (r *Restarter) spinDown(cancelFn context.CancelFunc) {
 	r.m.Lock()
+
 	cancelFn()
+
 	if r.ctx != nil && (*r.ctx).Err() != nil {
 		r.ctx = nil
 		r.c = nil
 	}
+
 	r.m.Unlock()
 }
